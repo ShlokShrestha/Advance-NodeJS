@@ -1,40 +1,54 @@
-const http = require("http");
 const fs = require("fs");
 
 const index = fs.readFileSync("index.html", "utf-8");
 const data = JSON.parse(fs.readFileSync("data.json", "utf-8"));
 const products = data.products;
 
-const server = http.createServer((req, res) => {
-  if (req.url.startsWith("/product")) {
-    const id = req.url.split("/")[2];
-    const product = products.find((p) => p.id === (+id));
-    res.setHeader("Content-Type", "text/html");
-    let modifiedIndex = index
-      .replace('**title**', product.title)
-      .replace('**url**', product.thumbnail)
-      .replace('**price**', product.price)
-      .replace('**rating**', product.rating);
-    res.end(modifiedIndex);
-    return;
-  }
+const express = require("express");
+const morgan = require("morgan");
+const server = express();
 
-  switch (req.url) {
-    case "/":
-      res.setHeader("Content-Type", "text/html");
-      res.end(index);
-      break;
-    case "/api":
-      res.setHeader("Content-Type", "application/json");
-      res.end(JSON.stringify(data));
-      break;
+//Build-in middleware (body parser JSON) for when body request is undefined
+server.use(express.json());
+// server.use(express.urlencoded());
+server.use(express.static("public"));
 
-    default:
-      res.writeHead(400);
-      res.end();
+server.use(morgan("default"));
+// server.use((req, res, next) => {
+//   console.log(req.method, req.ip, req.hostname);
+//   next();
+// });
+
+const auth = (req, res, next) => {
+  // console.log(req.query);
+  if (req.body.password == "123") {
+    next();
+  } else {
+    res.sendStatus(401);
   }
-  console.log("server start");
-  res.setHeader("dummy", "dummyValue");
+};
+
+//API - Endpoint - Route
+server.get("/", (req, res) => {
+  res.json({ type: "GET" });
+});
+server.post("/", auth, (req, res) => {
+  res.json({ type: "POST" });
+});
+server.put("/", (req, res) => {
+  res.json({ type: "PUT" });
+});
+server.delete("/", (req, res) => {
+  res.json({ type: "DELETE" });
 });
 
-server.listen(8000);
+server.get("/demo", (req, res) => {
+  // res.sendStatus(202).send(error);
+  //res.json(products);
+  // res.send("hello world");
+  // res.sendFile("C:\Users\asush\Desktop\nodejs trainig\NodeJS\index.html");
+});
+
+server.listen(8000, () => {
+  console.log("server started at 8000");
+});
