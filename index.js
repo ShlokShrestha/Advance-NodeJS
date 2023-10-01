@@ -28,6 +28,12 @@ const auth = (req, res, next) => {
   }
 };
 
+//REq.params
+server.get("/product/:id", (req, res) => {
+  console.log(req.params);
+  res.json({ type: "GET" });
+});
+
 //API - Endpoint - Route
 server.get("/", (req, res) => {
   res.json({ type: "GET" });
