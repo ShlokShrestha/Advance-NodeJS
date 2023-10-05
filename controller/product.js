@@ -1,51 +1,92 @@
 const fs = require("fs");
 // const index = fs.readFileSync("index.html", "utf-8");
-const data = JSON.parse(fs.readFileSync("data.json", "utf-8"));
-const products = data.products;
+// const data = JSON.parse(fs.readFileSync("data.json", "utf-8"));
+// const products = data.products;
+const model = require("../model/product");
+const Product = model.Product;
 
-const getAllProducts = (req, res) => {
-  res.json(products);
-};
+//Create product
+exports.createProduct = async (req, res) => {
+  try {
+    const product = new Product(req.body);
+    const doc = await product.save();
+    res.status(201).json(doc);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: "Error creating Product" });
+  }
 
-const getProduct = (req, res) => {
-  const id = +req.params.id;
-  const singleProduct = products.find((p) => p.id === id);
-  res.json(singleProduct);
-};
-
-const createProduct = (req, res) => {
-  console.log(req.body);
-  products.push(req.body);
-  res.json(req.body);
-};
-
-const replaceProduct = (req, res) => {
-  const id = +req.params.id;
-  const productIndex = products.findIndex((p) => p.id === id);
-  products.splice(productIndex, 1, { ...req.body, id: id });
-  res.status(201).json();
-};
-const updateProduct = (req, res) => {
-  const id = +req.params.id;
-  const productIndex = products.findIndex((p) => p.id === id);
-  const oldproduct = products[productIndex];
-  products.splice(productIndex, 1, { ...oldproduct, ...req.body });
-  res.status(201).json();
+  // products.push(req.body);
 };
 
-const deleteProduct = (req, res) => {
-  const id = +req.params.id;
-  const productIndex = products.findIndex((p) => p.id === id);
-  const oldproduct = products[productIndex];
-  products.splice(productIndex, 1);
-  res.status(201).json(oldproduct);
+exports.getAllProducts = async (req, res) => {
+  try {
+    const doc = await Product.find();
+    res.json(doc);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: "Error not found Product" });
+  }
 };
 
-module.exports = {
-  getAllProducts,
-  getProduct,
-  createProduct,
-  replaceProduct,
-  updateProduct,
-  deleteProduct,
+exports.getProduct = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const singleProduct = await Product.findById(id).exec();
+    res.json(singleProduct);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: "Error no found request Product" });
+  }
 };
+
+exports.replaceProduct = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const productReplace = await Product.findOneAndReplace(
+      { _id: id },
+      req.body,
+      { new: true }
+    ).exec();
+    res.status(201).json(productReplace);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: "Error Product" });
+  }
+};
+exports.updateProduct = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const updateProduct = await Product.findOneAndUpdate(
+      { _id: id },
+      req.body,
+      {
+        new: true,
+      }
+    ).exec();
+    res.status(201).json(updateProduct);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: "Error Product" });
+  }
+};
+
+exports.deleteProduct = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const deleteProduct = await Product.findByIdAndDelete({ _id: id }).exec();
+    res.status(201).json(deleteProduct);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: "Error Product" });
+  }
+};
+
+// module.exports = {
+//   getAllProducts,
+//   getProduct,
+//   createProduct,
+//   replaceProduct,
+//   updateProduct,
+//   deleteProduct,
+// };
